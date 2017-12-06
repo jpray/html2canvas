@@ -1555,11 +1555,21 @@ NodeContainer.prototype.isElementVisible = function() {
 };
 
 NodeContainer.prototype.css = function(attribute) {
-    if (!this.computedStyles) {
-        this.computedStyles = this.isPseudoElement ? this.parent.computedStyle(this.before ? ":before" : ":after") : this.computedStyle(null);
-    }
+	if (!this.computedStyles) {
+			this.computedStyles = this.isPseudoElement ? this.parent.computedStyle(this.before ? ":before" : ":after") : this.computedStyle(null);
+	}
 
-    return this.styles[attribute] || (this.styles[attribute] = this.computedStyles[attribute]);
+	var computedAttrStyles = this.computedStyles[attribute];
+
+	//IE11 is very touchy regarding the quotes wrapped around fontFamily names
+	//Here we normalize the names so quotes are only used on font family names that contain spaces
+	if (!this.styles[attribute] && attribute === "fontFamily") {
+		computedAttrStyles = computedAttrStyles.split(",").map(function(item) {
+			return item.trim().indexOf(" ") > -1 ? item.trim() : item.replace(/"/g,"").replace(/'/g,"");
+		}).join(",");
+	}
+
+	return this.styles[attribute] || (this.styles[attribute] = computedAttrStyles);
 };
 
 NodeContainer.prototype.prefixedCss = function(attribute) {
